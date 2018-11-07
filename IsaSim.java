@@ -30,28 +30,37 @@ public class IsaSim {
 
 			int instr = progr[pc];
 			int opcode = instr & 0x7f;
-			int rd = (instr >> 7) & 0x01f;
-			int rs1 = (instr >> 15) & 0x01f;
-			int imm = (instr >> 20);
+			int rd, rs1, rs2, imm;
 
 			switch (opcode) {
 
 			case 0x13:
+				rd = (instr >> 7) & 0x01f;
+				rs1 = (instr >> 15) & 0x01f;
+				imm = (instr >> 20);
 				reg[rd] = reg[rs1] + imm;
+				break;
+			case 0x33:
+				rd = (instr >> 7) & 0x01f;
+				rs1 = (instr >> 15) & 0x01f;
+				rs2 = (instr >> 20);
+				reg[rd] = reg[rs1] + reg[rs2];
 				break;
 			default:
 				System.out.println("Opcode " + opcode + " not yet implemented");
 				break;
 			}
 
+			for (int i = 0; i < reg.length; ++i) {
+				System.out.print(reg[i] + " ");
+			}
+
+			System.out.println();
+
 			++pc; // We count in 4 byte words
 			if (pc >= progr.length) {
 				break;
 			}
-			for (int i = 0; i < reg.length; ++i) {
-				System.out.print(reg[i] + " ");
-			}
-			System.out.println();
 		}
 
 		System.out.println("Program exit");

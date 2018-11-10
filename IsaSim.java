@@ -9,12 +9,14 @@
  */
 
 import java.io.*;
+import java.nio.*;
 import java.nio.file.Files;
 
 public class IsaSim {
 
 	static int pc;
-	static int reg[] = new int[4];
+	static int ra;
+	static int reg[] = new int[5];
 
 	// Here the first program hard coded as an array
 	// static int progr[] = {
@@ -27,32 +29,40 @@ public class IsaSim {
 
 	public static void main(String[] args) {
 
-		int j = 0;
+		File fileName = new File("./tests/task1/addlarge.bin");
 
-		// File file = new File("./tests/task1/addlarge.s");
-		// try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-	 //    	String line;
-  //   		while ((line = br.readLine()) != null) {
-  //   			progr[j++] = line;
-  //    	  		System.out.println(line);
-  //   		}
-		// }
-		// catch(FileNotFoundException ex) {
-  //           System.out.println("Unable to open file");                
-  //       }
-  //       catch(IOException ex) {
-  //           System.out.println("Error reading file");                  
-  //           // ex.printStackTrace();
-  //       }
-
-		File file = new File("./tests/task1/addlarge.bin");
-		throws IOException {
-			byte[] fileCont = Files.readAllBytes(file.toPath());
+		try {
+			FileInputStream fileIs = new FileInputStream(fileName);
+			ObjectInputStream is = new ObjectInputStream(fileIs);
+			int i = 0;
+			while (true) {
+				int imp;
+				try {
+					imp = is.readInt();
+				} catch (EOFException e) {
+					System.out.println("Here");
+					break;
+				} 
+				System.out.println(imp);
+				//progr[i++] = imp;
+			}
+		} catch (FileNotFoundException e) {
+			System.out.println("File not found");
+		} catch (IOException e) {
+			System.out.println("Io Exception " + e); 
 		}
+
+
+
+
+
+
+
 
 		System.out.println("Hello RISC-V World!");
 
 		pc = 0;
+		ra = 0;
 
 		for (;;) {
 
@@ -76,54 +86,74 @@ public class IsaSim {
 				imm = (instr >> 12);
 				reg[rd] = imm;
 				//*******Plus offset********
+				break;
 
 			//jal
 			case 0x6f:
 				rd = (instr >> 7) & 0x01f;
 				imm = (instr >> 12);
+
+				//the offset is sign extended and added to the pc
+				pc = pc + imm*4;
+				ra = rd;
+				break;
 			
 			//jalr
 			case 0x67:
 				rd = (instr >> 7) & 0x01f;
 				rs1 = (instr >> 15) & 0x01f;
 				imm = (instr >> 20);
-				
+
+				//Target address is obtained by adding the 12 bit signed imm to the register rs1 
+				//then setting the least significant bit to 0
+				pc = pc + (rs1 + imm);
+				ra = rd;
+				break;
+
 			case 0x63:
 				rd = (instr >> 7) & 0x01f;
-				funct = (instr >> 12) & 0x007;
+				funct = (instr >> 12) & 0x07;
 				rs1 = (instr >> 15) & 0x01f;
 				rs2 = (instr >> 20) & 0x01f;
 				imm = (instr >> 25);
 				
 				//beq
 				if (funct == 0x0) {
-
+					if (rs1 == rs2)
+						pc = pc + imm;
 				}
 
 				//bne
 				if (funct == 0x1) {
-					
-				}
+					if (rs1 != rs2)
+						pc = pc + imm;
+ 				}
 
 				//blt
 				if (funct == 0x4) {
-					
+					if (rs1 < rs2)
+						pc = pc + imm;
 				}
 
 				//bge
 				if (funct == 0x5) {
-					
+					if (rs1 > rs2)
+						pc = pc + imm;
 				}
 
 				//bltu
 				if (funct == 0x6) {
-					
+					if (rs1 < rs2)
+						pc = pc + imm;
 				}
 
 				//bgeu
 				if (funct == 0x7) {
-					
-				}				
+					if (rs1 > rs2)
+						pc = pc + imm;					
+				}
+
+				break;				
 			
 			case 0x03:
 				rd = (instr >> 7) & 0x01f;
@@ -131,30 +161,31 @@ public class IsaSim {
 				rs1 = (instr >> 15) & 0x01f;
 				imm = (instr >> 20);
 
-				//lb
-				if (funct == 0x0) {
+				//cast to 32 bit
+				reg[rd] = reg[rs1 + imm];
 
-				}
+				// //lb
+				// if (funct == 0x0)
+				// 	reg[rs1 + imm] = reg[rd] << 24 >> 24;
 					
-				//lh
-				if (funct == 0x1) {
-
-				}
+				// //lh
+				// if (funct == 0x1)
+				// 	reg[rs1 + imm] = reg[rd] << 16 >> 16;
 					
-				//lw
-				if (funct == 0x2) {
-
-				}
+				// //lw
+				// if (funct == 0x2)
+				// 	reg[rs1 + imm] = reg[rd];
 					
-				//lbu
-				if (funct == 0x4) {
+				// //lbu
+				// if (funct == 0x4) {
+				// 	reg[rs1 + imm] = reg[rd] << 24 >> 24;
 
-				}
-					
-				//lhu
-				if (funct == 0x5) {
+				// //lhu
+				// if (funct == 0x5) {
+				// 	reg[rs1 + imm] = reg[rd] << 16 >> 16;
 
-				}
+
+				break;
 
 			case 0x23:
 				rd = (instr >> 7) & 0x01f;
@@ -163,21 +194,25 @@ public class IsaSim {
 				rs2 = (instr >> 20) & 0x01f;
 				imm = (instr >> 25);
 
-				//sb
-				if (funct == 0x0) {
+				//cast to 32 bit
+				reg[rs1 + imm] = reg[rs2];
 
-				}
+				// //sb
+				// if (funct == 0x0) {
+
+				// }
 					
-				//sh
-				if (funct == 0x1) {
+				// //sh
+				// if (funct == 0x1) {
 
-				}
+				// }
 					
-				//sw
-				if (funct == 0x2) {
+				// //sw
+				// if (funct == 0x2) {
 
-				}
+				// }
 
+				break;
 
 			//addi
 			case 0x13:
@@ -221,16 +256,18 @@ public class IsaSim {
 
 				//slli
 				if (funct == 0x1)
-					
+					reg[rs1] = reg[rs1] << imm;
+
 				if (funct == 0x5) {
 					//srli
 					if (funct7 == 0x0)
-
+						reg[rs1] = reg[rs1] >> imm;
 					//srai
 					else if (funct7 == 0x20)
-
+						reg[rs1] = reg[rs1] >> imm;						
 				}
-				
+
+				break;
 
 			//add
 			case 0x33:
@@ -293,7 +330,8 @@ public class IsaSim {
 				//and
 				if (funct == 0x7)
 					reg[rd] = reg[rs1] & reg[rs2];
-			
+
+				break;
 
 			default:
 				System.out.println("Opcode " + opcode + " not yet implemented");

@@ -1,6 +1,6 @@
 
 all:
-	javac IsaSim.java
+	javac -g IsaSim.java
 	java IsaSim
 
 clean:

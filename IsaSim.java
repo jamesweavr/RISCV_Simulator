@@ -6,17 +6,19 @@
  * 
  * @author Martin Schoeberl (martin@jopdesign.com)
  *
+ *
+ * en.wikichip.org/wiki/risc-v/registers
+ * rv8.io/isa.html
  */
 
 import java.io.*;
-import java.nio.*;
 import java.nio.file.Files;
 
 public class IsaSim {
 
 	static int pc;
 	static int ra;
-	static int reg[] = new int[5];
+	static int reg[] = new int[31];
 
 	// Here the first program hard coded as an array
 	// static int progr[] = {
@@ -29,33 +31,26 @@ public class IsaSim {
 
 	public static void main(String[] args) {
 
-		File fileName = new File("./tests/task1/addlarge.bin");
-
+		File fileName = new File("./tests/task1/shift.bin");
+		byte[] buff = new byte[1000];
 		try {
-			FileInputStream fileIs = new FileInputStream(fileName);
-			ObjectInputStream is = new ObjectInputStream(fileIs);
-			int i = 0;
-			while (true) {
-				int imp;
-				try {
-					imp = is.readInt();
-				} catch (EOFException e) {
-					System.out.println("Here");
-					break;
-				} 
-				System.out.println(imp);
-				//progr[i++] = imp;
-			}
-		} catch (FileNotFoundException e) {
-			System.out.println("File not found");
+			buff = Files.readAllBytes(fileName.toPath());
 		} catch (IOException e) {
-			System.out.println("Io Exception " + e); 
+			System.out.println("Io Exception " + e);
 		}
 
+		progr = new int[buff.length / 4];
+   		int offset = 0;
+		for(int i = 0; i < progr.length; i++) {
+			progr[i] = (buff[0 + offset] & 0xFF) | ((buff[1 + offset] & 0xFF) << 8) |
+				((buff[2 + offset] & 0xFF) << 16) | ((buff[3 + offset] & 0xFF) << 24);  
+			offset += 4;
+			//System.out.println(progr[i]);
+		}
 
-
-
-
+		offset = 0;
+		System.out.println((buff[0 + offset] & 0xFF) | ((buff[1 + offset] & 0xFF) << 8) |
+				((buff[2 + offset] & 0xFF) << 16) | ((buff[3 + offset] & 0xFF) << 24));
 
 
 
@@ -70,7 +65,6 @@ public class IsaSim {
 			int opcode = instr & 0x7f;
 			int rd, funct, funct7, rs1, rs2, imm;
 
-			//rv8.io/isa.html
 			switch (opcode) {
 
 			//lui
@@ -269,7 +263,6 @@ public class IsaSim {
 
 				break;
 
-			//add
 			case 0x33:
 				rd = (instr >> 7) & 0x01f;
 				funct = (instr >> 12) & 0x007;
@@ -330,6 +323,42 @@ public class IsaSim {
 				//and
 				if (funct == 0x7)
 					reg[rd] = reg[rs1] & reg[rs2];
+
+				break;
+
+			case 0x73:
+				rd = (instr >> 7) & 0x01f;
+				funct = (instr >> 12) & 0x07;
+				rs1 = (instr >> 15) & 0x01f;
+				imm = (instr >> 20);
+				//ecall
+				if (funct == 0x0) {
+
+				}
+				//csrrw
+				if (funct == 0x1) {
+					
+				}
+				//csrrs
+				if (funct == 0x2) {
+					
+				}
+				//csrrc
+				if (funct == 0x3) {
+					
+				}
+				//csrrwi
+				if (funct == 0x5) {
+					
+				}
+				//csrrsi
+				if (funct == 0x6) {
+					
+				}
+				//csrrci
+				if (funct == 0x7) {
+					
+				}
 
 				break;
 

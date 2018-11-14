@@ -30,8 +30,8 @@ public class IsaSim {
 	static int progr[];
 
 	public static void main(String[] args) {
-		//File fileName = new File("./tests/task1/addpos.bin");
-		File fileName = new File("./tests/task2/branchmany.bin");
+		File fileName = new File("./tests/task1/addpos.bin");
+		//File fileName = new File("./tests/task2/branchmany.bin");
 		//File fileName = new File("./tests/task3/loop.bin");
 
 		byte[] buff = new byte[1000];

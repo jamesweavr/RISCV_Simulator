@@ -30,8 +30,10 @@ public class IsaSim {
 	static int progr[];
 
 	public static void main(String[] args) {
+		//File fileName = new File("./tests/task1/addpos.bin");
+		File fileName = new File("./tests/task2/branchmany.bin");
+		//File fileName = new File("./tests/task3/loop.bin");
 
-		File fileName = new File("./tests/task1/shift.bin");
 		byte[] buff = new byte[1000];
 		try {
 			buff = Files.readAllBytes(fileName.toPath());
@@ -45,13 +47,8 @@ public class IsaSim {
 			progr[i] = (buff[0 + offset] & 0xFF) | ((buff[1 + offset] & 0xFF) << 8) |
 				((buff[2 + offset] & 0xFF) << 16) | ((buff[3 + offset] & 0xFF) << 24);  
 			offset += 4;
-			//System.out.println(progr[i]);
+			System.out.println(progr[i]);
 		}
-
-		offset = 0;
-		System.out.println((buff[0 + offset] & 0xFF) | ((buff[1 + offset] & 0xFF) << 8) |
-				((buff[2 + offset] & 0xFF) << 16) | ((buff[3 + offset] & 0xFF) << 24));
-
 
 
 		System.out.println("Hello RISC-V World!");
@@ -66,7 +63,6 @@ public class IsaSim {
 			int rd, funct, funct7, rs1, rs2, imm;
 
 			switch (opcode) {
-
 			//lui
 			case 0x37:
 				rd = (instr >> 7) & 0x01f;
@@ -110,42 +106,50 @@ public class IsaSim {
 				rs1 = (instr >> 15) & 0x01f;
 				rs2 = (instr >> 20) & 0x01f;
 				imm = (instr >> 25);
-				
+
+				System.out.println(pc + " " + imm);
+
 				//beq
 				if (funct == 0x0) {
+					System.out.println("beq");
 					if (rs1 == rs2)
-						pc = pc + imm;
+						pc = pc + imm - 1;
 				}
 
 				//bne
 				if (funct == 0x1) {
-					if (rs1 != rs2)
-						pc = pc + imm;
+					System.out.println("bne");
+					if (reg[rs1] != reg[rs2])
+						pc = pc + imm - 1;
  				}
 
 				//blt
 				if (funct == 0x4) {
-					if (rs1 < rs2)
-						pc = pc + imm;
+					System.out.println("blt");
+					if (reg[rs1] < reg[rs2])
+						pc = pc + imm - 1;
 				}
 
 				//bge
 				if (funct == 0x5) {
-					if (rs1 > rs2)
-						pc = pc + imm;
+					System.out.println("bge");
+					if (reg[rs1] > reg[rs2])
+						pc = pc + imm - 1;
 				}
 
 				//bltu
 				if (funct == 0x6) {
-					if (rs1 < rs2)
-						pc = pc + imm;
+					if (reg[rs1] < reg[rs2])
+						pc = pc + imm - 1;
 				}
 
 				//bgeu
 				if (funct == 0x7) {
-					if (rs1 > rs2)
-						pc = pc + imm;					
+					if (reg[rs1] > reg[rs2])
+						pc = pc + imm - 1;					
 				}
+
+				System.out.println(rs1 + "(" +reg[rs1] + ") = " + rs2 + "(" + reg[rs2] + ")");
 
 				break;				
 			
@@ -216,10 +220,11 @@ public class IsaSim {
 				imm = (instr >> 20);
 				funct7 = (instr >> 25);
 
-				//addi
-				if (funct == 0x0)
-					reg[rd] = reg[rs1] + imm;
 
+				//addi
+				if (funct == 0x0) {
+					reg[rd] = reg[rs1] + imm;
+				}
 				//slti
 				if (funct == 0x2) {
 					if (reg[rs1] < imm)
@@ -260,6 +265,9 @@ public class IsaSim {
 					else if (funct7 == 0x20)
 						reg[rs1] = reg[rs1] >> imm;						
 				}
+
+				//System.out.println(rd +"("+reg[rd] + ") = " + rs1 +"("+ reg[rs1]+") + " + imm);
+
 
 				break;
 
@@ -367,7 +375,8 @@ public class IsaSim {
 				break;
 			}
 
-			for (int i = 0; i < reg.length; ++i) {
+			System.out.print("pc" + pc + " ");
+			for (int i = 10; i < 15; ++i) {
 				System.out.print(reg[i] + " ");
 			}
 

@@ -20,6 +20,15 @@ public class IsaSim {
 	static int ra;
 	static int reg[] = new int[31];
 
+	public static final String FIN = 
+	//"./tests/task1/addneg.bin";
+	//"./tests/task2/branchmany.bin";
+	//"./tests/task3/loop.bin";
+	//"./tests/InstructionTests/test_jalr.bin";
+	"./tests/FinalAssignmentTests/t14.bin";
+
+	public static final String FOUT = "out.bin";
+
 	// Here the first program hard coded as an array
 	// static int progr[] = {
 	// 		// As minimal RISC-V assembler example
@@ -30,9 +39,7 @@ public class IsaSim {
 	static int progr[];
 
 	public static void main(String[] args) {
-		File fileName = new File("./tests/task1/addpos.bin");
-		//File fileName = new File("./tests/task2/branchmany.bin");
-		//File fileName = new File("./tests/task3/loop.bin");
+		File fileName = new File(FIN);
 
 		byte[] buff = new byte[1000];
 		try {
@@ -62,19 +69,21 @@ public class IsaSim {
 			int opcode = instr & 0x7f;
 			int rd, funct, funct7, rs1, rs2, imm;
 
+			//System.out.println(opcode);
+
 			switch (opcode) {
 			//lui
 			case 0x37:
 				rd = (instr >> 7) & 0x01f;
 				imm = (instr >> 12);
-				reg[rd] = imm;
+				reg[rd] = (imm << 12);
 				break;
 
 			//auipc
 			case 0x17:
 				rd = (instr >> 7) & 0x01f;
 				imm = (instr >> 12);
-				reg[rd] = imm;
+				reg[rd] = pc + (imm << 12);
 				//*******Plus offset********
 				break;
 
@@ -82,10 +91,17 @@ public class IsaSim {
 			case 0x6f:
 				rd = (instr >> 7) & 0x01f;
 				imm = (instr >> 12);
+				int bit1 = (imm & 0x7fe00) >> 9;
+				int bit2 = (imm & 0x100) << 2;
+				int bit3 = (imm & 0xff) << 12;
+				int bit4 = (imm >> 19) << 19;
+
+				imm = bit1 | bit2 | bit3 | bit4;
 
 				//the offset is sign extended and added to the pc
-				pc = pc + imm*4;
-				ra = rd;
+				System.out.println(imm);
+				reg[rd] = pc + 1; 
+				pc = pc + imm;
 				break;
 			
 			//jalr
@@ -96,8 +112,8 @@ public class IsaSim {
 
 				//Target address is obtained by adding the 12 bit signed imm to the register rs1 
 				//then setting the least significant bit to 0
-				pc = pc + (rs1 + imm);
-				ra = rd;
+				reg[rd] = pc + 1;
+				pc = pc + (((rs1 + imm) & 0xFFE)/4);
 				break;
 
 			case 0x63:
@@ -106,33 +122,39 @@ public class IsaSim {
 				rs1 = (instr >> 15) & 0x01f;
 				rs2 = (instr >> 20) & 0x01f;
 				imm = (instr >> 25);
+				imm = rd | (imm << 5);
+				System.out.println(imm);
 
-				System.out.println(pc + " " + imm);
+				if (imm < 0)
+					imm--;
+				imm = imm/4;
+
+				//System.out.println("Imm is " + imm + " Pc is " + pc);
 
 				//beq
 				if (funct == 0x0) {
-					System.out.println("beq");
+					//System.out.println("beq");
 					if (rs1 == rs2)
 						pc = pc + imm - 1;
 				}
 
 				//bne
 				if (funct == 0x1) {
-					System.out.println("bne");
+					//System.out.println("bne");
 					if (reg[rs1] != reg[rs2])
 						pc = pc + imm - 1;
  				}
 
 				//blt
 				if (funct == 0x4) {
-					System.out.println("blt");
+					//System.out.println("blt");
 					if (reg[rs1] < reg[rs2])
 						pc = pc + imm - 1;
 				}
 
 				//bge
 				if (funct == 0x5) {
-					System.out.println("bge");
+					//System.out.println("bge");
 					if (reg[rs1] > reg[rs2])
 						pc = pc + imm - 1;
 				}
@@ -149,7 +171,7 @@ public class IsaSim {
 						pc = pc + imm - 1;					
 				}
 
-				System.out.println(rs1 + "(" +reg[rs1] + ") = " + rs2 + "(" + reg[rs2] + ")");
+				//System.out.println(rs1 + "(" +reg[rs1] + ") = " + rs2 + "(" + reg[rs2] + ")");
 
 				break;				
 			
@@ -160,7 +182,7 @@ public class IsaSim {
 				imm = (instr >> 20);
 
 				//cast to 32 bit
-				reg[rd] = reg[rs1 + imm];
+				reg[rd] = reg[rs1 + (imm >> 20)];
 
 				// //lb
 				// if (funct == 0x0)
@@ -192,8 +214,12 @@ public class IsaSim {
 				rs2 = (instr >> 20) & 0x01f;
 				imm = (instr >> 25);
 
-				//cast to 32 bit
-				reg[rs1 + imm] = reg[rs2];
+				imm = rd | (imm << 5);
+				System.out.println(rs1);
+				System.out.println(imm/4);
+				System.out.println(rs2);
+
+				reg[rs1 + (imm/4)] = reg[rs2];
 
 				// //sb
 				// if (funct == 0x0) {
@@ -220,10 +246,9 @@ public class IsaSim {
 				imm = (instr >> 20);
 				funct7 = (instr >> 25);
 
-
 				//addi
 				if (funct == 0x0) {
-					reg[rd] = reg[rs1] + imm;
+					reg[rd] = reg[rs1] + (imm);
 				}
 				//slti
 				if (funct == 0x2) {
@@ -340,34 +365,7 @@ public class IsaSim {
 				rs1 = (instr >> 15) & 0x01f;
 				imm = (instr >> 20);
 				//ecall
-				if (funct == 0x0) {
-
-				}
-				//csrrw
-				if (funct == 0x1) {
-					
-				}
-				//csrrs
-				if (funct == 0x2) {
-					
-				}
-				//csrrc
-				if (funct == 0x3) {
-					
-				}
-				//csrrwi
-				if (funct == 0x5) {
-					
-				}
-				//csrrsi
-				if (funct == 0x6) {
-					
-				}
-				//csrrci
-				if (funct == 0x7) {
-					
-				}
-
+			
 				break;
 
 			default:
@@ -375,12 +373,32 @@ public class IsaSim {
 				break;
 			}
 
-			System.out.print("pc" + pc + " ");
-			for (int i = 10; i < 15; ++i) {
-				System.out.print(reg[i] + " ");
+
+
+			try {
+				FileOutputStream fostream = new FileOutputStream(FOUT, false);
+				ObjectOutputStream oostream = new ObjectOutputStream(fostream);
+
+				System.out.print("pc" + pc + " ");
+				for (int i = 0; i < 31; ++i) {
+					oostream.writeInt(reg[i]);
+					System.out.print(reg[i] + " ");
+				}
+				System.out.println();
+
+				oostream.close();
+
+			} catch (FileNotFoundException e) {
+				System.out.println("File not found " + e);
+			} catch (IOException e) {
+				System.out.println("IOException " + e);
 			}
 
-			System.out.println();
+
+
+
+
+
 
 			++pc; // We count in 4 byte words
 			if (pc >= progr.length) {

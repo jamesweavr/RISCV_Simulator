@@ -20,12 +20,14 @@ public class IsaSim {
 	static int ra;
 	static int reg[] = new int[31];
 
+	public static final String TES = "t13.bin";
+
 	public static final String FIN = 
 	//"./tests/task1/addneg.bin";
 	//"./tests/task2/branchmany.bin";
 	//"./tests/task3/loop.bin";
 	//"./tests/InstructionTests/test_jalr.bin";
-	"./tests/FinalAssignmentTests/t14.bin";
+	"./tests/FinalAssignmentTests/";
 
 	public static final String FOUT = "out.bin";
 
@@ -39,7 +41,7 @@ public class IsaSim {
 	static int progr[];
 
 	public static void main(String[] args) {
-		File fileName = new File(FIN);
+		File fileName = new File(FIN + TES);
 
 		byte[] buff = new byte[1000];
 		try {
@@ -99,7 +101,7 @@ public class IsaSim {
 				imm = bit1 | bit2 | bit3 | bit4;
 
 				//the offset is sign extended and added to the pc
-				System.out.println(imm);
+				//System.out.println(imm);
 				reg[rd] = pc + 1; 
 				pc = pc + imm;
 				break;
@@ -123,7 +125,7 @@ public class IsaSim {
 				rs2 = (instr >> 20) & 0x01f;
 				imm = (instr >> 25);
 				imm = rd | (imm << 5);
-				System.out.println(imm);
+				//System.out.println(imm);
 
 				if (imm < 0)
 					imm--;
@@ -184,27 +186,6 @@ public class IsaSim {
 				//cast to 32 bit
 				reg[rd] = reg[rs1 + (imm >> 20)];
 
-				// //lb
-				// if (funct == 0x0)
-				// 	reg[rs1 + imm] = reg[rd] << 24 >> 24;
-					
-				// //lh
-				// if (funct == 0x1)
-				// 	reg[rs1 + imm] = reg[rd] << 16 >> 16;
-					
-				// //lw
-				// if (funct == 0x2)
-				// 	reg[rs1 + imm] = reg[rd];
-					
-				// //lbu
-				// if (funct == 0x4) {
-				// 	reg[rs1 + imm] = reg[rd] << 24 >> 24;
-
-				// //lhu
-				// if (funct == 0x5) {
-				// 	reg[rs1 + imm] = reg[rd] << 16 >> 16;
-
-
 				break;
 
 			case 0x23:
@@ -215,26 +196,8 @@ public class IsaSim {
 				imm = (instr >> 25);
 
 				imm = rd | (imm << 5);
-				System.out.println(rs1);
-				System.out.println(imm/4);
-				System.out.println(rs2);
 
 				reg[rs1 + (imm/4)] = reg[rs2];
-
-				// //sb
-				// if (funct == 0x0) {
-
-				// }
-					
-				// //sh
-				// if (funct == 0x1) {
-
-				// }
-					
-				// //sw
-				// if (funct == 0x2) {
-
-				// }
 
 				break;
 
@@ -376,7 +339,7 @@ public class IsaSim {
 
 
 			try {
-				FileOutputStream fostream = new FileOutputStream(FOUT, false);
+				FileOutputStream fostream = new FileOutputStream(TES, false);
 				ObjectOutputStream oostream = new ObjectOutputStream(fostream);
 
 				System.out.print("pc" + pc + " ");
@@ -393,12 +356,6 @@ public class IsaSim {
 			} catch (IOException e) {
 				System.out.println("IOException " + e);
 			}
-
-
-
-
-
-
 
 			++pc; // We count in 4 byte words
 			if (pc >= progr.length) {

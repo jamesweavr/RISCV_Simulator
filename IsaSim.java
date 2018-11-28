@@ -20,7 +20,7 @@ public class IsaSim {
 	static int ra;
 	static int reg[] = new int[31];
 
-	public static final String TES = "t13.bin";
+	public static final String TES = "t8.bin";
 
 	public static final String FIN = 
 	//"./tests/task1/addneg.bin";
@@ -71,7 +71,7 @@ public class IsaSim {
 			int opcode = instr & 0x7f;
 			int rd, funct, funct7, rs1, rs2, imm;
 
-			//System.out.println(opcode);
+			System.out.println(opcode);
 
 			switch (opcode) {
 			//lui
@@ -125,7 +125,7 @@ public class IsaSim {
 				rs2 = (instr >> 20) & 0x01f;
 				imm = (instr >> 25);
 				imm = rd | (imm << 5);
-				//System.out.println(imm);
+				System.out.println(funct);
 
 				if (imm < 0)
 					imm--;
@@ -163,17 +163,19 @@ public class IsaSim {
 
 				//bltu
 				if (funct == 0x6) {
-					if (reg[rs1] < reg[rs2])
+					System.out.println("bltu");
+					if (Math.abs(reg[rs1]) < Math.abs(reg[rs2]))
 						pc = pc + imm - 1;
 				}
 
 				//bgeu
 				if (funct == 0x7) {
-					if (reg[rs1] > reg[rs2])
+					System.out.println("bgeu");
+					if (Math.abs(reg[rs1]) > Math.abs(reg[rs2]))
 						pc = pc + imm - 1;					
 				}
 
-				//System.out.println(rs1 + "(" +reg[rs1] + ") = " + rs2 + "(" + reg[rs2] + ")");
+				System.out.println(rs1 + "(" +reg[rs1] + ") = " + rs2 + "(" + reg[rs2] + ")");
 
 				break;				
 			
@@ -208,6 +210,8 @@ public class IsaSim {
 				rs1 = (instr >> 15) & 0x01f;
 				imm = (instr >> 20);
 				funct7 = (instr >> 25);
+
+				System.out.println(rd +"("+reg[rd] + ") = " + rs1 +"("+ reg[rs1]+") + " + imm);
 
 				//addi
 				if (funct == 0x0) {
@@ -254,7 +258,6 @@ public class IsaSim {
 						reg[rs1] = reg[rs1] >> imm;						
 				}
 
-				//System.out.println(rd +"("+reg[rd] + ") = " + rs1 +"("+ reg[rs1]+") + " + imm);
 
 
 				break;
